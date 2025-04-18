@@ -338,7 +338,7 @@ export default function Home() {
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={() => setShowUserFlowersSidebar(true)}
-            className="h-10 w-10 rounded-full bg-custom-primary text-custom-text shadow-md hover:bg-custom-primary/90 flex items-center justify-center"
+            className="h-11 w-11 rounded-full bg-custom-primary text-custom-text shadow-md hover:bg-custom-primary/90 flex items-center justify-center"
             aria-label="Show my flowers"
           >
             {getUserInitial(user?.username || "")}
@@ -598,13 +598,7 @@ export default function Home() {
             <div className="p-4 border-t border-custom-secondary/30">
               {user && (
                 <div className="relative group">
-                <div className="flex items-center gap-3 p-3 bg-custom-input rounded-md">                    
-                  <div
-                      className="h-10 w-10 rounded-full flex items-center justify-center text-custom-text font-medium text-lg flex-shrink-0 cursor-pointer"
-                      style={{ backgroundColor: getUserColor(user.username) }}
-                    >
-                      {getUserInitial(user.username)}
-                    </div>                    
+                <div className="flex items-center gap-3 p-3 bg-custom-input rounded-md">                                 
                     <div className="flex-grow min-w-0">
                       <div className="text-sm font-medium truncate text-custom-text">{user.username}</div>
                       <div className="text-xs text-custom-text/70">

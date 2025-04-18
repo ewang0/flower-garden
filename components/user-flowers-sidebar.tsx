@@ -86,14 +86,12 @@ export function UserFlowersSidebar({
   if (isCollapsed) {
     return (
       <div className="absolute top-4 right-4 z-20">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 rounded-full bg-custom-primary text-custom-text shadow-md hover:bg-custom-primary/90"
+        <button
+          className="h-11 w-11 rounded-full bg-custom-primary text-custom-text shadow-md hover:bg-custom-primary/90"
           onClick={() => setIsCollapsed(false)}
         >
           {getUserInitial(username)}
-        </Button>
+        </button>
       </div>
     )
   }
