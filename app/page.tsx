@@ -321,10 +321,10 @@ export default function Home() {
       <div className="absolute top-4 left-4 z-10">
         <button
           onClick={toggleView}
-          className={`px-4 py-2 rounded-full shadow-md transition-colors flex items-center gap-2 ${
+          className={`px-4 py-3 rounded-full shadow-md transition-colors flex items-center gap-2 ${
             isPlanted
-              ? "bg-custom-primary hover:bg-custom-primary/90 text-custom-text"
-              : "bg-custom-primary hover:bg-custom-primary/90 text-custom-text"
+              ? "bg-emerald-700 hover:bg-emerald-700/90 text-custom-text"
+              : "bg-emerald-700 hover:bg-emerald-700/90 text-custom-text"
           }`}
           aria-label="Toggle view"
         >
@@ -351,7 +351,7 @@ export default function Home() {
         <div className="absolute top-4 right-4 z-20">
           <button
             onClick={toggleSidebar}
-            className="p-2 bg-custom-secondary text-custom-text rounded-full shadow-md hover:bg-custom-secondary/90 transition-colors"
+            className="p-3 bg-custom-secondary text-custom-text rounded-full shadow-md hover:bg-custom-secondary/90 transition-colors"
             aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
           >
             {sidebarOpen ? <X className="h-5 w-5" /> : <Pencil className="h-5 w-5" />}
@@ -598,13 +598,13 @@ export default function Home() {
             <div className="p-4 border-t border-custom-secondary/30">
               {user && (
                 <div className="relative group">
-                  <div className="flex items-center gap-3 p-3 bg-custom-input rounded-md">
-                    <div
+                <div className="flex items-center gap-3 p-3 bg-custom-input rounded-md">                    
+                  <div
                       className="h-10 w-10 rounded-full flex items-center justify-center text-custom-text font-medium text-lg flex-shrink-0 cursor-pointer"
                       style={{ backgroundColor: getUserColor(user.username) }}
                     >
                       {getUserInitial(user.username)}
-                    </div>
+                    </div>                    
                     <div className="flex-grow min-w-0">
                       <div className="text-sm font-medium truncate text-custom-text">{user.username}</div>
                       <div className="text-xs text-custom-text/70">

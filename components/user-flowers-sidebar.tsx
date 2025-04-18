@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Droplet, Trash2, MoreVertical, ChevronRight } from "lucide-react"
+import { Droplet, Trash2, MoreVertical, X } from "lucide-react"
 import { waterFlower, removeFlower, type PlantedFlower } from "@/lib/flower-storage"
 import { Button } from "@/components/ui/button"
 import { formatDistanceToNow } from "@/lib/date-utils"
@@ -110,7 +110,7 @@ export function UserFlowersSidebar({
           className="h-8 w-8 rounded-full hover:bg-custom-secondary/20"
           title="Collapse sidebar"
         >
-          <ChevronRight className="h-4 w-4" />
+          <X className="h-4 w-4" />
         </Button>
       </div>
 
