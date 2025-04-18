@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Slider } from "@/components/ui/slider"
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { ColorPicker } from "@/components/color-picker"
@@ -49,6 +49,10 @@ export default function Home() {
   const [showUserFlowersSidebar, setShowUserFlowersSidebar] = useState(false)
   const [wateredFlowerId, setWateredFlowerId] = useState<string | null>(null)
 
+  // Create refs for the scene container and sidebar
+  const sceneContainerRef = useRef<HTMLDivElement>(null)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+
   // Set isClient to true once component mounts and detect mobile
   useEffect(() => {
     setIsClient(true)
@@ -70,6 +74,35 @@ export default function Home() {
     }
   }, [])
 
+  // Add click handler to close sidebar when clicking outside on mobile
+  useEffect(() => {
+    // Create a handler that can work with both MouseEvent and TouchEvent
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      // Only handle this on mobile when the sidebar is open and we're in editor mode
+      if (!isMobile || !sidebarOpen || isPlanted) return
+
+      // Check if the click is outside the sidebar
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node) &&
+        sceneContainerRef.current &&
+        sceneContainerRef.current.contains(event.target as Node)
+      ) {
+        setSidebarOpen(false)
+      }
+    }
+
+    // Add event listener
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("touchstart", handleClickOutside)
+
+    // Clean up
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("touchstart", handleClickOutside)
+    }
+  }, [isMobile, sidebarOpen, isPlanted])
+
   // Load planted flowers on mount and when authentication changes
   useEffect(() => {
     if (isClient) {
@@ -86,12 +119,12 @@ export default function Home() {
     }
   }, [isPlanted])
 
-    useEffect(() => {
-      if (isClient) {
-        // Generate a random flower when the component mounts
-        generateNewFlower()
-      }
-    }, [isClient]) // Only run once when isClient becomes true
+  useEffect(() => {
+    if (isClient) {
+      // Generate a random flower when the component mounts
+      generateNewFlower()
+    }
+  }, [isClient]) // Only run once when isClient becomes true
 
   const generateNewFlower = () => {
     // Randomize all flower parameters
@@ -203,6 +236,7 @@ export default function Home() {
     <div className="fixed inset-0">
       {/* Canvas container with dynamic sizing */}
       <div
+        ref={sceneContainerRef}
         className={`absolute ${isPlanted ? "inset-0" : "top-0 bottom-0 left-0"}`}
         style={{
           right: isPlanted ? 0 : sidebarOpen ? `${sidebarWidth}px` : 0,
@@ -242,7 +276,7 @@ export default function Home() {
       <div className="absolute top-4 left-4 z-10">
         <button
           onClick={toggleView}
-          className={`px-4 py-3 rounded-full shadow-md transition-colors flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-full shadow-md transition-colors flex items-center gap-2 ${
             isPlanted
               ? "bg-custom-primary hover:bg-custom-primary/90 text-custom-text"
               : "bg-custom-primary hover:bg-custom-primary/90 text-custom-text"
@@ -250,9 +284,7 @@ export default function Home() {
           aria-label="Toggle view"
         >
           {isPlanted ? <Pencil className="h-5 w-5" /> : <Flower className="h-5 w-5" />}
-          <span className="text-sm font-medium whitespace-nowrap">
-            {isPlanted ? "Flower Editor" : "View Garden"}
-          </span>
+          <span className="text-sm font-medium whitespace-nowrap">{isPlanted ? "Flower Editor" : "View Garden"}</span>
         </button>
       </div>
 
@@ -317,6 +349,7 @@ export default function Home() {
       {/* Fixed control panel on the right side */}
       {!isPlanted && (
         <div
+          ref={sidebarRef}
           className={`absolute top-0 right-0 h-full bg-custom-dark text-custom-text backdrop-blur-sm shadow-lg border-l border-custom-secondary/30 overflow-y-auto z-10 transition-all duration-300 ease-in-out ${
             sidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
@@ -325,7 +358,9 @@ export default function Home() {
           <div className="h-full flex flex-col">
             <CardHeader className="pb-4">
               <CardTitle className="text-custom-text">Flower Garden</CardTitle>
-              <CardDescription className="text-custom-text/70 text-pretty opacity-80">Create a flower and plant it in your garden</CardDescription>
+              <CardDescription className="text-custom-text/70 text-pretty opacity-80">
+                Create a flower and plant it in your garden
+              </CardDescription>
             </CardHeader>
 
             <CardContent className="flex-grow overflow-y-auto">
@@ -564,4 +599,3 @@ export default function Home() {
     </div>
   )
 }
-
