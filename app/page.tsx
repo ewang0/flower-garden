@@ -1,27 +1,40 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, useRef } from "react"
-import { Slider } from "@/components/ui/slider"
-import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { ColorPicker } from "@/components/color-picker"
-import { SignInForm } from "@/components/sign-in-form"
-import { useUser } from "@/contexts/user-context"
-import { getPlantedFlowers, plantFlower, loadFlowers, type PlantedFlower } from "@/lib/flower-storage"
-import { Shuffle, PlusCircle, LogOut, Flower, Pencil, X } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import dynamic from "next/dynamic"
-import { UserFlowersSidebar } from "@/components/user-flowers-sidebar"
+import { useState, useEffect, useRef } from "react";
+import { Slider } from "@/components/ui/slider";
+import {
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { ColorPicker } from "@/components/color-picker";
+import { SignInForm } from "@/components/sign-in-form";
+import { useUser } from "@/contexts/user-context";
+import {
+  getPlantedFlowers,
+  plantFlower,
+  loadFlowers,
+  type PlantedFlower,
+} from "@/lib/flower-storage";
+import { Shuffle, PlusCircle, LogOut, Flower, Pencil, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import dynamic from "next/dynamic";
+import { UserFlowersSidebar } from "@/components/user-flowers-sidebar";
 
 // The previous approach still won't work because the loading component can't access component state
 // Let's take a different approach by creating a wrapper component
 
 // Replace the DynamicFlowerScene declaration with this:
 const DynamicFlowerScene = dynamic(
-  () => import("@/components/flower-scene").then((mod) => ({ default: mod.FlowerScene })),
-  { ssr: false },
-)
+  () =>
+    import("@/components/flower-scene").then((mod) => ({
+      default: mod.FlowerScene,
+    })),
+  { ssr: false }
+);
 
 // Add this component before the Home component
 function FlowerSceneWrapper({
@@ -31,10 +44,10 @@ function FlowerSceneWrapper({
   sidebarWidth,
   ...props
 }: {
-  isLoading: boolean
-  isPlanted: boolean
-  sidebarOpen: boolean
-  sidebarWidth: number
+  isLoading: boolean;
+  isPlanted: boolean;
+  sidebarOpen: boolean;
+  sidebarWidth: number;
 } & React.ComponentProps<typeof DynamicFlowerScene>) {
   return (
     <>
@@ -50,151 +63,178 @@ function FlowerSceneWrapper({
       )}
       {!isLoading && <DynamicFlowerScene {...props} />}
     </>
-  )
+  );
 }
 
 // Sidebar width constants
-const SIDEBAR_WIDTH_MOBILE = 320
-const SIDEBAR_WIDTH_DESKTOP = 384
+const SIDEBAR_WIDTH_MOBILE = 320;
+const SIDEBAR_WIDTH_DESKTOP = 384;
 
 // Define a consistent transition for both sidebar and scene container
-const TRANSITION_STYLE = "transition-all duration-300 ease-in-out"
+const TRANSITION_STYLE = "transition-all duration-300 ease-in-out";
 
 export default function Home() {
-  const { user, isAuthenticated, signOut } = useUser()
-  const [petalCount, setPetalCount] = useState(8)
-  const [petalLength, setPetalLength] = useState(1)
-  const [petalWidth, setPetalWidth] = useState(0.5)
-  const [stemHeight, setStemHeight] = useState(3)
-  const [petalColor, setPetalColor] = useState("#ff6b6b")
-  const [centerColor, setCenterColor] = useState("#feca57")
-  const [stemColor, setStemColor] = useState("#1dd1a1")
-  const [seed, setSeed] = useState(Math.random())
-  const [isPlanted, setIsPlanted] = useState(false)
-  const [plantedFlowers, setPlantedFlowers] = useState<PlantedFlower[]>([])
-  const [isClient, setIsClient] = useState(false)
-  const [focusedFlowerPosition, setFocusedFlowerPosition] = useState<[number, number, number] | null>(null)
-  const [isMobile, setIsMobile] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [activeTab, setActiveTab] = useState("shape")
-  const [showUserFlowersSidebar, setShowUserFlowersSidebar] = useState(false)
-  const [wateredFlowerId, setWateredFlowerId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const { user, isAuthenticated, signOut } = useUser();
+  const [petalCount, setPetalCount] = useState(8);
+  const [petalLength, setPetalLength] = useState(1);
+  const [petalWidth, setPetalWidth] = useState(0.5);
+  const [stemHeight, setStemHeight] = useState(3);
+  const [petalColor, setPetalColor] = useState("#ff6b6b");
+  const [centerColor, setCenterColor] = useState("#feca57");
+  const [stemColor, setStemColor] = useState("#1dd1a1");
+  const [seed, setSeed] = useState(Math.random());
+  const [isPlanted, setIsPlanted] = useState(false);
+  const [plantedFlowers, setPlantedFlowers] = useState<PlantedFlower[]>([]);
+  const [isClient, setIsClient] = useState(false);
+  const [focusedFlowerPosition, setFocusedFlowerPosition] = useState<
+    [number, number, number] | null
+  >(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState("shape");
+  const [showUserFlowersSidebar, setShowUserFlowersSidebar] = useState(false);
+  const [wateredFlowerId, setWateredFlowerId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   // Let's simplify our approach and just modify the scene container to include the loading state
 
   // First, add a new state for tracking the loading state
-  const [isSceneLoading, setIsSceneLoading] = useState(true)
+  const [isSceneLoading, setIsSceneLoading] = useState(true);
 
   // Create refs for the scene container and sidebar
-  const sceneContainerRef = useRef<HTMLDivElement>(null)
-  const sidebarRef = useRef<HTMLDivElement>(null)
+  const sceneContainerRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Add a new ref for the user flowers sidebar
+  const userFlowersSidebarRef = useRef<HTMLDivElement>(null);
 
   // Set isClient to true once component mounts and detect mobile
   useEffect(() => {
-    setIsClient(true)
+    setIsClient(true);
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      setIsMobile(window.innerWidth < 768);
       // Auto-collapse sidebar on mobile
       if (window.innerWidth < 768) {
-        setSidebarOpen(false)
+        setSidebarOpen(false);
       } else {
-        setSidebarOpen(true)
+        setSidebarOpen(true);
       }
-    }
+    };
 
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
 
     return () => {
-      window.removeEventListener("resize", checkMobile)
-    }
-  }, [])
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
 
   // Add click handler to close sidebar when clicking outside on mobile
   useEffect(() => {
-    // Change the event parameter type to be more generic
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      // Only handle this on mobile when the sidebar is open and we're in editor mode
-      if (!isMobile || !sidebarOpen || isPlanted) return
+    const handleClickOutside = (event: MouseEvent) => {
+      // Handle flower editor view sidebar
+      if (!isMobile || !sidebarOpen || isPlanted) {
+        // Handle garden view sidebar
+        if (isPlanted && showUserFlowersSidebar) {
+          // Check if the click is outside the user flowers sidebar
+          if (
+            userFlowersSidebarRef.current &&
+            !userFlowersSidebarRef.current.contains(event.target as Node) &&
+            sceneContainerRef.current &&
+            sceneContainerRef.current.contains(event.target as Node)
+          ) {
+            setShowUserFlowersSidebar(false);
+          }
+        }
+        return;
+      }
 
-      // Check if the click is outside the sidebar
+      // Check if the click is outside the sidebar in flower editor view
       if (
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target as Node) &&
         sceneContainerRef.current &&
         sceneContainerRef.current.contains(event.target as Node)
       ) {
-        setSidebarOpen(false)
+        setSidebarOpen(false);
       }
-    }
+    };
 
     // Add event listener
-    document.addEventListener("mousedown", handleClickOutside as EventListener)
-    document.addEventListener("touchstart", handleClickOutside as EventListener)
+    document.addEventListener("mousedown", handleClickOutside as EventListener);
+    document.addEventListener(
+      "touchstart",
+      handleClickOutside as EventListener
+    );
 
     // Clean up
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside as EventListener)
-      document.removeEventListener("touchstart", handleClickOutside as EventListener)
-    }
-  }, [isMobile, sidebarOpen, isPlanted])
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside as EventListener
+      );
+      document.removeEventListener(
+        "touchstart",
+        handleClickOutside as EventListener
+      );
+    };
+  }, [isMobile, sidebarOpen, isPlanted, showUserFlowersSidebar]);
 
   // Load planted flowers on mount and when authentication changes
   useEffect(() => {
     if (isClient) {
-      loadFlowers()
-      setPlantedFlowers(getPlantedFlowers())
+      loadFlowers();
+      setPlantedFlowers(getPlantedFlowers());
     }
-  }, [isClient])
+  }, [isClient]);
 
   // Reset focused flower when switching to single flower view
   useEffect(() => {
     if (!isPlanted) {
-      setFocusedFlowerPosition(null)
-      setWateredFlowerId(null)
+      setFocusedFlowerPosition(null);
+      setWateredFlowerId(null);
     }
-  }, [isPlanted])
+  }, [isPlanted]);
 
   useEffect(() => {
     if (isClient) {
       // Generate a random flower when the component mounts
-      generateNewFlower()
-      setIsLoading(false)
+      generateNewFlower();
+      setIsLoading(false);
     }
-  }, [isClient]) // Only run once when isClient becomes true
+  }, [isClient]); // Only run once when isClient becomes true
 
   const generateNewFlower = () => {
     // Randomize all flower parameters
-    setPetalCount(Math.floor(Math.random() * 15) + 5) // 5-20 petals
-    setPetalLength(0.5 + Math.random() * 1.5) // 0.5-2.0 length
-    setPetalWidth(0.1 + Math.random() * 0.9) // 0.1-1.0 width
-    setStemHeight(1 + Math.random() * 4) // 1-5 height
+    setPetalCount(Math.floor(Math.random() * 15) + 5); // 5-20 petals
+    setPetalLength(0.5 + Math.random() * 1.5); // 0.5-2.0 length
+    setPetalWidth(0.1 + Math.random() * 0.9); // 0.1-1.0 width
+    setStemHeight(1 + Math.random() * 4); // 1-5 height
 
     // Generate random colors
     const randomColor = () => {
-      const letters = "0123456789ABCDEF"
-      let color = "#"
+      const letters = "0123456789ABCDEF";
+      let color = "#";
       for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)]
+        color += letters[Math.floor(Math.random() * 16)];
       }
-      return color
-    }
+      return color;
+    };
 
-    setPetalColor(randomColor())
-    setCenterColor(randomColor())
-    setStemColor(randomColor())
+    setPetalColor(randomColor());
+    setCenterColor(randomColor());
+    setStemColor(randomColor());
 
     // Also change the seed for additional randomness in the geometry
-    setSeed(Math.random())
-  }
+    setSeed(Math.random());
+  };
 
   const handlePlantFlower = () => {
-    if (!user) return
+    if (!user) return;
 
     // Generate a random position within the field
-    const x = Math.random() * 20 - 10 // -10 to 10
-    const z = Math.random() * 20 - 10 // -10 to 10
-    const position: [number, number, number] = [x, 0, z]
+    const x = Math.random() * 20 - 10; // -10 to 10
+    const z = Math.random() * 20 - 10; // -10 to 10
+    const position: [number, number, number] = [x, 0, z];
 
     // Plant the flower
     const newFlower = plantFlower({
@@ -208,66 +248,66 @@ export default function Home() {
       stemColor,
       seed,
       position,
-    })
+    });
 
     // Update the local state - use a function to ensure we're working with the latest state
     setPlantedFlowers((prevFlowers) => {
       // Check if this flower is already in the array (by ID)
-      const exists = prevFlowers.some((f) => f.id === newFlower.id)
-      if (exists) return prevFlowers
-      return [...prevFlowers, newFlower]
-    })
+      const exists = prevFlowers.some((f) => f.id === newFlower.id);
+      if (exists) return prevFlowers;
+      return [...prevFlowers, newFlower];
+    });
 
     // Set the focused flower position
-    setFocusedFlowerPosition(position)
+    setFocusedFlowerPosition(position);
 
     // Switch to planted view
-    setIsPlanted(true)
+    setIsPlanted(true);
 
     // Make sure the My Flowers sidebar is closed
-    setShowUserFlowersSidebar(false)
+    setShowUserFlowersSidebar(false);
 
     // Generate a new flower for next time
-    generateNewFlower()
-  }
+    generateNewFlower();
+  };
 
   const toggleView = () => {
-    setIsPlanted(!isPlanted)
+    setIsPlanted(!isPlanted);
     // Close the sidebar when switching views
-    setShowUserFlowersSidebar(false)
+    setShowUserFlowersSidebar(false);
     // Clear any watered flower focus
-    setWateredFlowerId(null)
-  }
+    setWateredFlowerId(null);
+  };
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen)
-  }
+    setSidebarOpen(!sidebarOpen);
+  };
 
   // Handle watering a flower
   const handleWaterFlower = (flowerId: string) => {
-    setWateredFlowerId(flowerId)
-  }
+    setWateredFlowerId(flowerId);
+  };
 
   // Function to get initials from username
   const getUserInitial = (username: string) => {
-    return username.charAt(0).toUpperCase()
-  }
+    return username.charAt(0).toUpperCase();
+  };
 
   // Function to generate a consistent color based on username - now using custom-primary
   const getUserColor = (username: string) => {
-    return "#713A91" // Using color 4 (custom-primary) for user avatar
-  }
+    return "#713A91"; // Using color 4 (custom-primary) for user avatar
+  };
 
   if (!isAuthenticated) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-b from-purple-200 to-purple-300 p-4">
         <SignInForm />
       </div>
-    )
+    );
   }
 
   // Calculate the sidebar width based on screen size
-  const sidebarWidth = isMobile ? SIDEBAR_WIDTH_MOBILE : SIDEBAR_WIDTH_DESKTOP
+  const sidebarWidth = isMobile ? SIDEBAR_WIDTH_MOBILE : SIDEBAR_WIDTH_DESKTOP;
 
   return (
     <div className="fixed inset-0">
@@ -309,6 +349,7 @@ export default function Home() {
       {/* User Flowers Sidebar (only visible in garden view when requested) */}
       {isPlanted && showUserFlowersSidebar && (
         <UserFlowersSidebar
+          ref={userFlowersSidebarRef}
           onClose={() => setShowUserFlowersSidebar(false)}
           username={user?.username || ""}
           plantedFlowers={plantedFlowers}
@@ -328,8 +369,14 @@ export default function Home() {
           }`}
           aria-label="Toggle view"
         >
-          {isPlanted ? <Pencil className="h-5 w-5" /> : <Flower className="h-5 w-5" />}
-          <span className="text-sm font-medium whitespace-nowrap">{isPlanted ? "Flower Editor" : "View Garden"}</span>
+          {isPlanted ? (
+            <Pencil className="h-5 w-5" />
+          ) : (
+            <Flower className="h-5 w-5" />
+          )}
+          <span className="text-sm font-medium whitespace-nowrap">
+            {isPlanted ? "Flower Editor" : "View Garden"}
+          </span>
         </button>
       </div>
 
@@ -354,7 +401,11 @@ export default function Home() {
             className="p-3 bg-custom-secondary text-custom-text rounded-full shadow-md hover:bg-custom-secondary/90 transition-colors"
             aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
           >
-            {sidebarOpen ? <X className="h-5 w-5" /> : <Pencil className="h-5 w-5" />}
+            {sidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Pencil className="h-5 w-5" />
+            )}
           </button>
         </div>
       )}
@@ -376,7 +427,9 @@ export default function Home() {
               aria-label="Generate random flower"
             >
               <Shuffle className="h-5 w-5" />
-              <span className="text-sm font-medium whitespace-nowrap">Random</span>
+              <span className="text-sm font-medium whitespace-nowrap">
+                Random
+              </span>
             </button>
 
             <button
@@ -385,7 +438,9 @@ export default function Home() {
               aria-label="Plant this flower in the garden"
             >
               <PlusCircle className="h-5 w-5" />
-              <span className="text-sm font-medium whitespace-nowrap">Plant Flower</span>
+              <span className="text-sm font-medium whitespace-nowrap">
+                Plant Flower
+              </span>
             </button>
           </div>
         </div>
@@ -411,7 +466,12 @@ export default function Home() {
             <CardContent className="flex-grow overflow-y-auto">
               {isMobile ? (
                 // Mobile view with tabs
-                <Tabs defaultValue="shape" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <Tabs
+                  defaultValue="shape"
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="w-full"
+                >
                   <TabsList className="grid w-full grid-cols-2 bg-custom-input">
                     <TabsTrigger
                       value="shape"
@@ -430,7 +490,9 @@ export default function Home() {
                   <TabsContent value="shape" className="mt-4">
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-custom-text">Petal Count: {petalCount}</label>
+                        <label className="text-sm font-medium text-custom-text">
+                          Petal Count: {petalCount}
+                        </label>
                         <Slider
                           min={3}
                           max={20}
@@ -488,18 +550,33 @@ export default function Home() {
                   <TabsContent value="colors" className="mt-4">
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-custom-text">Petal Color</label>
-                        <ColorPicker color={petalColor} onChange={setPetalColor} />
+                        <label className="text-sm font-medium text-custom-text">
+                          Petal Color
+                        </label>
+                        <ColorPicker
+                          color={petalColor}
+                          onChange={setPetalColor}
+                        />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-custom-text">Center Color</label>
-                        <ColorPicker color={centerColor} onChange={setCenterColor} />
+                        <label className="text-sm font-medium text-custom-text">
+                          Center Color
+                        </label>
+                        <ColorPicker
+                          color={centerColor}
+                          onChange={setCenterColor}
+                        />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-custom-text">Stem Color</label>
-                        <ColorPicker color={stemColor} onChange={setStemColor} />
+                        <label className="text-sm font-medium text-custom-text">
+                          Stem Color
+                        </label>
+                        <ColorPicker
+                          color={stemColor}
+                          onChange={setStemColor}
+                        />
                       </div>
                     </div>
                   </TabsContent>
@@ -509,10 +586,14 @@ export default function Home() {
                 <div className="space-y-6">
                   {/* Shape Section */}
                   <div>
-                    <h3 className="text-lg font-medium text-custom-text mb-4">Shape</h3>
+                    <h3 className="text-lg font-medium text-custom-text mb-4">
+                      Shape
+                    </h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-custom-text">Petal Count: {petalCount}</label>
+                        <label className="text-sm font-medium text-custom-text">
+                          Petal Count: {petalCount}
+                        </label>
                         <Slider
                           min={3}
                           max={20}
@@ -572,21 +653,38 @@ export default function Home() {
 
                   {/* Colors Section */}
                   <div>
-                    <h3 className="text-lg font-medium text-custom-text mb-4">Colors</h3>
+                    <h3 className="text-lg font-medium text-custom-text mb-4">
+                      Colors
+                    </h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-custom-text">Petal Color</label>
-                        <ColorPicker color={petalColor} onChange={setPetalColor} />
+                        <label className="text-sm font-medium text-custom-text">
+                          Petal Color
+                        </label>
+                        <ColorPicker
+                          color={petalColor}
+                          onChange={setPetalColor}
+                        />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-custom-text">Center Color</label>
-                        <ColorPicker color={centerColor} onChange={setCenterColor} />
+                        <label className="text-sm font-medium text-custom-text">
+                          Center Color
+                        </label>
+                        <ColorPicker
+                          color={centerColor}
+                          onChange={setCenterColor}
+                        />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-custom-text">Stem Color</label>
-                        <ColorPicker color={stemColor} onChange={setStemColor} />
+                        <label className="text-sm font-medium text-custom-text">
+                          Stem Color
+                        </label>
+                        <ColorPicker
+                          color={stemColor}
+                          onChange={setStemColor}
+                        />
                       </div>
                     </div>
                   </div>
@@ -598,11 +696,18 @@ export default function Home() {
             <div className="p-4 border-t border-custom-secondary/30">
               {user && (
                 <div className="relative group">
-                <div className="flex items-center gap-3 p-3 bg-custom-input rounded-md">                                 
+                  <div className="flex items-center gap-3 p-3 bg-custom-input rounded-md">
                     <div className="flex-grow min-w-0">
-                      <div className="text-sm font-medium truncate text-custom-text">{user.username}</div>
+                      <div className="text-sm font-medium truncate text-custom-text">
+                        {user.username}
+                      </div>
                       <div className="text-xs text-custom-text/70">
-                        {plantedFlowers.filter((f) => f.username === user.username).length} flowers planted
+                        {
+                          plantedFlowers.filter(
+                            (f) => f.username === user.username
+                          ).length
+                        }{" "}
+                        flowers planted
                       </div>
                     </div>
                     <button
@@ -619,8 +724,8 @@ export default function Home() {
                     <div className="bg-custom-dark border border-custom-secondary/30 rounded-md shadow-lg p-2">
                       <button
                         onClick={() => {
-                          setIsPlanted(true)
-                          setShowUserFlowersSidebar(true)
+                          setIsPlanted(true);
+                          setShowUserFlowersSidebar(true);
                         }}
                         className="w-full text-left px-3 py-2 rounded-md hover:bg-custom-secondary/20 text-custom-text flex items-center gap-2"
                       >
@@ -636,5 +741,5 @@ export default function Home() {
         </div>
       )}
     </div>
-  )
+  );
 }
