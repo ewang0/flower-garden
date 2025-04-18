@@ -258,6 +258,7 @@ function Flower({
       // Add some randomness to petal shape
       const length = petalLength * (0.9 + random(0, 0.2, petalSeed))
       const width = petalWidth * (0.9 + random(0, 0.2, petalSeed + 0.1))
+      // Add more variance to the bend angle for each petal
       const baseBend = random(0.1, 0.3, petalSeed + 0.2)
       const bendVariance = random(-0.1, 0.1, petalSeed + i * 0.5)
       const bend = Math.max(0.05, baseBend + bendVariance)
@@ -432,6 +433,7 @@ interface FlowerSceneProps extends FlowerProps {
   focusedFlowerPosition?: [number, number, number] | null
   sidebarVisible?: boolean
   wateredFlowerId?: string | null
+  onLoad?: () => void
 }
 
 export function FlowerScene(props: FlowerSceneProps) {
@@ -442,7 +444,15 @@ export function FlowerScene(props: FlowerSceneProps) {
     stemHeight = 3,
     sidebarVisible = false,
     wateredFlowerId = null,
+    onLoad,
   } = props
+
+  // Call onLoad when the component mounts
+  useEffect(() => {
+    if (onLoad) {
+      onLoad()
+    }
+  }, [onLoad])
 
   // Calculate the y-position offset based on stem height for the single flower view
   // Using a more subtle adjustment factor (0.25 instead of 0.5)
@@ -465,7 +475,7 @@ export function FlowerScene(props: FlowerSceneProps) {
       }}
     >
       <ambientLight intensity={ambientLightIntensity} />
-      {/* <pointLight position={[10, 10, 10]} intensity={1} castShadow /> */}
+      <pointLight position={[10, 10, 10]} intensity={1} castShadow />
       <directionalLight
         position={[5, 10, 5]}
         intensity={directionalLightIntensity}
@@ -480,6 +490,7 @@ export function FlowerScene(props: FlowerSceneProps) {
           <Flower {...props} />
         </group>
       )}
+
       <Environment preset={"night"} />
       <CameraController
         isPlanted={isPlanted}
@@ -493,4 +504,3 @@ export function FlowerScene(props: FlowerSceneProps) {
 }
 
 export default FlowerScene
-

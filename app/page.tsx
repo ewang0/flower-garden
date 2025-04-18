@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useRef } from "react"
 import { Slider } from "@/components/ui/slider"
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -7,27 +9,56 @@ import { ColorPicker } from "@/components/color-picker"
 import { SignInForm } from "@/components/sign-in-form"
 import { useUser } from "@/contexts/user-context"
 import { getPlantedFlowers, plantFlower, loadFlowers, type PlantedFlower } from "@/lib/flower-storage"
-import { Shuffle, PlusCircle, LogOut, Flower, ChevronRight, ChevronLeft, Pencil } from "lucide-react"
+import { Shuffle, PlusCircle, LogOut, Flower, Pencil, X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
 import { UserFlowersSidebar } from "@/components/user-flowers-sidebar"
 
-// Dynamically import the FlowerScene component with no SSR
+// The previous approach still won't work because the loading component can't access component state
+// Let's take a different approach by creating a wrapper component
+
+// Replace the DynamicFlowerScene declaration with this:
 const DynamicFlowerScene = dynamic(
   () => import("@/components/flower-scene").then((mod) => ({ default: mod.FlowerScene })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-b from-purple-200 to-purple-300">
-        <p className="text-lg font-medium">Loading 3D scene...</p>
-      </div>
-    ),
-  },
+  { ssr: false },
 )
+
+// Add this component before the Home component
+function FlowerSceneWrapper({
+  isLoading,
+  isPlanted,
+  sidebarOpen,
+  sidebarWidth,
+  ...props
+}: {
+  isLoading: boolean
+  isPlanted: boolean
+  sidebarOpen: boolean
+  sidebarWidth: number
+} & React.ComponentProps<typeof DynamicFlowerScene>) {
+  return (
+    <>
+      {isLoading && (
+        <div
+          className="absolute top-0 bottom-0 left-0 flex items-center justify-center bg-gradient-to-b from-purple-200 to-purple-300"
+          style={{
+            right: isPlanted ? 0 : sidebarOpen ? `${sidebarWidth}px` : 0,
+          }}
+        >
+          <p className="text-lg font-medium">Loading 3D scene...</p>
+        </div>
+      )}
+      {!isLoading && <DynamicFlowerScene {...props} />}
+    </>
+  )
+}
 
 // Sidebar width constants
 const SIDEBAR_WIDTH_MOBILE = 320
 const SIDEBAR_WIDTH_DESKTOP = 384
+
+// Define a consistent transition for both sidebar and scene container
+const TRANSITION_STYLE = "transition-all duration-300 ease-in-out"
 
 export default function Home() {
   const { user, isAuthenticated, signOut } = useUser()
@@ -48,6 +79,11 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("shape")
   const [showUserFlowersSidebar, setShowUserFlowersSidebar] = useState(false)
   const [wateredFlowerId, setWateredFlowerId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  // Let's simplify our approach and just modify the scene container to include the loading state
+
+  // First, add a new state for tracking the loading state
+  const [isSceneLoading, setIsSceneLoading] = useState(true)
 
   // Create refs for the scene container and sidebar
   const sceneContainerRef = useRef<HTMLDivElement>(null)
@@ -76,7 +112,7 @@ export default function Home() {
 
   // Add click handler to close sidebar when clicking outside on mobile
   useEffect(() => {
-    // Create a handler that can work with both MouseEvent and TouchEvent
+    // Change the event parameter type to be more generic
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       // Only handle this on mobile when the sidebar is open and we're in editor mode
       if (!isMobile || !sidebarOpen || isPlanted) return
@@ -93,13 +129,13 @@ export default function Home() {
     }
 
     // Add event listener
-    document.addEventListener("mousedown", handleClickOutside)
-    document.addEventListener("touchstart", handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside as EventListener)
+    document.addEventListener("touchstart", handleClickOutside as EventListener)
 
     // Clean up
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.removeEventListener("touchstart", handleClickOutside)
+      document.removeEventListener("mousedown", handleClickOutside as EventListener)
+      document.removeEventListener("touchstart", handleClickOutside as EventListener)
     }
   }, [isMobile, sidebarOpen, isPlanted])
 
@@ -123,6 +159,7 @@ export default function Home() {
     if (isClient) {
       // Generate a random flower when the component mounts
       generateNewFlower()
+      setIsLoading(false)
     }
   }, [isClient]) // Only run once when isClient becomes true
 
@@ -235,13 +272,20 @@ export default function Home() {
   return (
     <div className="fixed inset-0">
       {/* Canvas container with dynamic sizing */}
+      {/* Then update the scene container to include the loading indicator
+      // Find the scene container div and update it: */}
       <div
         ref={sceneContainerRef}
-        className={`absolute ${isPlanted ? "inset-0" : "top-0 bottom-0 left-0"}`}
+        className={`absolute ${isPlanted ? "inset-0" : "top-0 bottom-0 left-0"} ${!isPlanted ? TRANSITION_STYLE : ""}`}
         style={{
           right: isPlanted ? 0 : sidebarOpen ? `${sidebarWidth}px` : 0,
         }}
       >
+        {isSceneLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-purple-200 to-purple-300">
+            <p className="text-lg font-medium">Loading 3D scene...</p>
+          </div>
+        )}
         {isClient && (
           <DynamicFlowerScene
             petalCount={petalCount}
@@ -257,6 +301,7 @@ export default function Home() {
             focusedFlowerPosition={focusedFlowerPosition}
             sidebarVisible={!isPlanted && sidebarOpen}
             wateredFlowerId={wateredFlowerId}
+            onLoad={() => setIsSceneLoading(false)}
           />
         )}
       </div>
@@ -309,7 +354,7 @@ export default function Home() {
             className="p-2 bg-custom-secondary text-custom-text rounded-full shadow-md hover:bg-custom-secondary/90 transition-colors"
             aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
           >
-            {sidebarOpen ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            {sidebarOpen ? <X className="h-5 w-5" /> : <Pencil className="h-5 w-5" />}
           </button>
         </div>
       )}
@@ -317,7 +362,7 @@ export default function Home() {
       {/* Floating action buttons (only in flower editor mode) - centered in the visible area */}
       {!isPlanted && (
         <div
-          className="absolute bottom-6 z-10"
+          className={`absolute bottom-6 z-10 ${TRANSITION_STYLE}`}
           style={{
             left: `calc(50% - ${sidebarOpen ? sidebarWidth / 2 : 0}px)`,
             transform: "translateX(-50%)",
@@ -350,7 +395,7 @@ export default function Home() {
       {!isPlanted && (
         <div
           ref={sidebarRef}
-          className={`absolute top-0 right-0 h-full bg-custom-dark text-custom-text backdrop-blur-sm shadow-lg border-l border-custom-secondary/30 overflow-y-auto z-10 transition-all duration-300 ease-in-out ${
+          className={`absolute top-0 right-0 h-full bg-custom-dark text-custom-text backdrop-blur-sm shadow-lg border-l border-custom-secondary/30 overflow-y-auto z-10 ${TRANSITION_STYLE} ${
             sidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
           style={{ width: sidebarWidth }}
