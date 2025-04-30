@@ -16,7 +16,6 @@ import { useUser } from "@/contexts/user-context";
 import {
   getPlantedFlowers,
   plantFlower,
-  loadFlowers,
   type PlantedFlower,
 } from "@/lib/flower-storage";
 import { Shuffle, PlusCircle, LogOut, Flower, Pencil, X } from "lucide-react";
@@ -179,12 +178,19 @@ export default function Home() {
     };
   }, [isMobile, sidebarOpen, isPlanted, showUserFlowersSidebar]);
 
-  // Load planted flowers on mount and when authentication changes
+  // Load planted flowers on mount
   useEffect(() => {
+    const fetchFlowers = async () => {
+      // Fetch flowers asynchronously
+      const flowers = await getPlantedFlowers(); // Await the promise
+      setPlantedFlowers(flowers); // Now set the state with the resolved array
+    };
+
     if (isClient) {
-      loadFlowers();
-      setPlantedFlowers(getPlantedFlowers());
+      // Ensure isClient is true before fetching
+      fetchFlowers().catch(console.error); // Add basic error handling
     }
+    // Intentionally not depending on isPlanted, fetch once on client mount
   }, [isClient]);
 
   // Reset focused flower when switching to single flower view
@@ -228,7 +234,7 @@ export default function Home() {
     setSeed(Math.random());
   };
 
-  const handlePlantFlower = () => {
+  const handlePlantFlower = async () => {
     if (!user) return;
 
     // Generate a random position within the field
@@ -236,8 +242,8 @@ export default function Home() {
     const z = Math.random() * 20 - 10; // -10 to 10
     const position: [number, number, number] = [x, 0, z];
 
-    // Plant the flower
-    const newFlower = plantFlower({
+    // Plant the flower asynchronously
+    const newFlower = await plantFlower({
       username: user.username,
       petalCount,
       petalLength,
@@ -250,25 +256,26 @@ export default function Home() {
       position,
     });
 
-    // Update the local state - use a function to ensure we're working with the latest state
-    setPlantedFlowers((prevFlowers) => {
-      // Check if this flower is already in the array (by ID)
-      const exists = prevFlowers.some((f) => f.id === newFlower.id);
-      if (exists) return prevFlowers;
-      return [...prevFlowers, newFlower];
-    });
+    if (newFlower) {
+      // Update the local state
+      setPlantedFlowers((prevFlowers) => [...prevFlowers, newFlower]);
 
-    // Set the focused flower position
-    setFocusedFlowerPosition(position);
+      // Set the focused flower position (using the position from the returned flower)
+      setFocusedFlowerPosition(newFlower.position);
 
-    // Switch to planted view
-    setIsPlanted(true);
+      // Switch to planted view
+      setIsPlanted(true);
 
-    // Make sure the My Flowers sidebar is closed
-    setShowUserFlowersSidebar(false);
+      // Make sure the My Flowers sidebar is closed
+      setShowUserFlowersSidebar(false);
 
-    // Generate a new flower for next time
-    generateNewFlower();
+      // Generate a new flower for next time
+      generateNewFlower();
+    } else {
+      // Handle the error case, e.g., show a notification
+      console.error("Failed to plant the flower.");
+      // Maybe add user feedback here, e.g., using a toast library
+    }
   };
 
   const toggleView = () => {

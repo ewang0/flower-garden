@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect, forwardRef } from "react";
+import {
+  useState,
+  useEffect,
+  forwardRef,
+  SetStateAction,
+  Dispatch,
+} from "react";
 import { Droplet, Trash2, MoreVertical, X } from "lucide-react";
 import {
   waterFlower,
@@ -14,7 +20,7 @@ interface UserFlowersSidebarProps {
   username: string;
   onClose: () => void;
   plantedFlowers: PlantedFlower[];
-  setPlantedFlowers: (flowers: PlantedFlower[]) => void;
+  setPlantedFlowers: Dispatch<SetStateAction<PlantedFlower[]>>;
   onWaterFlower?: (flowerId: string) => void;
 }
 
@@ -47,19 +53,24 @@ export const UserFlowersSidebar = forwardRef<
     }, [plantedFlowers, username]);
 
     // Handle watering a flower
-    const handleWaterFlower = (flowerId: string) => {
-      const updatedFlower = waterFlower(flowerId);
+    const handleWaterFlower = async (flowerId: string) => {
+      const updatedFlower = await waterFlower(flowerId);
       if (updatedFlower) {
         // Set the flower as just watered for animation
         setJustWateredId(flowerId);
         setTimeout(() => setJustWateredId(null), 2000);
 
-        // Update both the filtered list and the main list
-        setUserFlowers((prev) =>
-          prev.map((f) => (f.id === flowerId ? updatedFlower : f))
+        // Update the local state (userFlowers)
+        setUserFlowers((prev: PlantedFlower[]) =>
+          prev.map((f: PlantedFlower) =>
+            f.id === flowerId ? updatedFlower : f
+          )
         );
-        setPlantedFlowers(
-          plantedFlowers.map((f) => (f.id === flowerId ? updatedFlower : f))
+        // Update the parent state (plantedFlowers) via the prop function
+        setPlantedFlowers((prev: PlantedFlower[]) =>
+          prev.map((f: PlantedFlower) =>
+            f.id === flowerId ? updatedFlower : f
+          )
         );
 
         // Notify parent component about the watered flower
@@ -68,16 +79,25 @@ export const UserFlowersSidebar = forwardRef<
           // Close the sidebar after watering to show the full view of the watered flower
           setIsCollapsed(true);
         }
+      } else {
+        console.error("Failed to water flower:", flowerId);
       }
     };
 
     // Handle removing a flower
-    const handleRemoveFlower = (flowerId: string) => {
-      const success = removeFlower(flowerId);
+    const handleRemoveFlower = async (flowerId: string) => {
+      const success = await removeFlower(flowerId);
       if (success) {
-        // Update both the filtered list and the main list
-        setUserFlowers((prev) => prev.filter((f) => f.id !== flowerId));
-        setPlantedFlowers(plantedFlowers.filter((f) => f.id !== flowerId));
+        // Update the local state (userFlowers)
+        setUserFlowers((prev: PlantedFlower[]) =>
+          prev.filter((f: PlantedFlower) => f.id !== flowerId)
+        );
+        // Update the parent state (plantedFlowers) via the prop function
+        setPlantedFlowers((prev: PlantedFlower[]) =>
+          prev.filter((f: PlantedFlower) => f.id !== flowerId)
+        );
+      } else {
+        console.error("Failed to remove flower:", flowerId);
       }
     };
 
@@ -153,11 +173,19 @@ export const UserFlowersSidebar = forwardRef<
                         Flower #{flower.id.slice(-4)}
                       </div>
                       <div className="text-xs text-custom-text/70">
-                        Planted {formatDistanceToNow(flower.plantedAt)} ago
+                        Planted{" "}
+                        {formatDistanceToNow(
+                          new Date(flower.plantedAt).getTime()
+                        )}{" "}
+                        ago
                       </div>
                       {flower.lastWatered && (
                         <div className="text-xs text-custom-text/70">
-                          Watered {formatDistanceToNow(flower.lastWatered)} ago
+                          Watered{" "}
+                          {formatDistanceToNow(
+                            new Date(flower.lastWatered).getTime()
+                          )}{" "}
+                          ago
                         </div>
                       )}
                     </div>
